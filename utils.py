@@ -17,6 +17,7 @@ def get_today_date():
 
     return current_date
 
+
 def get_last_seven_days():
   """Returns a list of dates for the last seven days, including today."""
   today = date.today()
@@ -26,6 +27,7 @@ def get_last_seven_days():
   # Convert dates to strings using list comprehension
   next_week_strings = [date.strftime(string_format) for date in dates]
   return next_week_strings
+
 
 def get_next_seven_days():
   """Returns a list of dates for the next seven days, starting from tomorrow."""
@@ -37,7 +39,6 @@ def get_next_seven_days():
   # Convert dates to strings using list comprehension
   last_week_strings = [date.strftime(string_format) for date in dates]
   return last_week_strings
-import pandas as pd
 
 
 def get_data_for_dates(df, date_list):
@@ -58,44 +59,6 @@ def get_data_for_dates(df, date_list):
   except KeyError:  # Handle cases where some dates might not be present
     print(f"Warning: Data not found for all dates in {date_list}")
     return df.loc[[date for date in date_list if date in df.index]]  # Return available data
-
-
-def get_data_before_last_week(df):
-
-  # Check if 'date' column exists
-  if 'date' not in df.columns:
-    raise ValueError("Dataframe does not contain a 'date' column")
-
-  # Convert date column to datetime format (assuming it's not already)
-  df['date'] = pd.to_datetime(df['date'])
-
-  # Check if DataFrame is empty
-  if df.empty:
-    return None
-
-  # Get the minimum date and calculate the starting date for the last seven days before
-  min_date = df['date'].min()
-  last_week_start = min_date - pd.Timedelta(days=7)
-
-  # Set the date column as the index for efficient lookup
-  df.set_index('date', inplace=True)
-
-  # Select data for the last seven days before the minimum date
-  return df.loc[last_week_start:min_date-pd.Timedelta(days=1)]
-
-
-# Sample DataFrame (assuming you have your data)
-data = {'date': ['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-24'],
-        'value': [10, 15, 20, 25, 30]}
-df = pd.DataFrame(data)
-
-# Example usage
-date_list = [pd.to_datetime('2024-04-22'), pd.to_datetime('2024-04-24')]
-filtered_data = get_data_for_dates(df.copy(), date_list)  # Copy to avoid modifying original df
-print(filtered_data)
-
-last_week_data = get_data_before_last_week(df.copy())  # Copy to avoid modifying original df
-print(last_week_data)
 
 
 

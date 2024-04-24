@@ -1,32 +1,11 @@
 import streamlit as st
 from streamlit_folium import st_folium
 import folium
+from utils import *
 
-
-st.set_page_config(layout="wide", )
+st.set_page_config(layout="wide")
 st.title("Interactive Streamlit Map")
 
-full_screen_style = """
-<style>
-body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-</style>
-"""
-st.markdown(full_screen_style, unsafe_allow_html=True)
-
-# latitude = 31.1471  # Replace with default latitude
-# longitude = 75.3412  # Replace with default longitude
-# zoom_level = st.slider("Zoom Level:", 1, 18, 13)  # Set default zoom
-
-# m = folium.Map(location=[latitude, longitude], zoom_start=zoom_level)
-
-# # Add a marker (optional)
-# folium.Marker([latitude, longitude]).add_to(m)
-
-# st_data = st_folium(m, width=725)
 import geopandas as gpd
 
 # Load your shapefile (assuming 'map_data' folder and 'aoi_punjab.shp' filename)
@@ -45,5 +24,24 @@ folium.GeoJson(data=gdf.to_json(), name='My Shapefile').add_to(m)
 # Display the map with desired width
 st_folium(m, width=1400, height=1000)
 
-st.sidebar.write("This is a sidebar")
+last_week_dates = get_last_seven_days()
+next_week_dates = get_next_seven_days()
+
+st.sidebar.markdown("## Options")
+# selecting date
+selected_week = st.sidebar.radio("Select a date", ("Last Week", "Next Week"))
+
+# Code based on selected week
+if selected_week == "Last Week":
+  # Use last_week_dates for further processing
+    with st.sidebar:
+        st.write("You selected Last Week")
+        date = st.selectbox("Select a date", last_week_dates)
+  
+elif selected_week == "Next Week":
+    # Use next_week_dates for further processing
+    with st.sidebar:
+        st.write("You selected Next Week")
+        date = st.selectbox("Select a date", next_week_dates)
+  
 
