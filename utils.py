@@ -40,55 +40,19 @@ def get_next_seven_days():
   last_week_strings = [date.strftime(string_format) for date in dates]
   return last_week_strings
 
-
-def get_data_for_dates(df, date_list):
-
-  # Check if 'date' column exists
-  if 'date' not in df.columns:
-    raise ValueError("Dataframe does not contain a 'date' column")
-
-  # Convert date column to datetime format (assuming it's not already)
-  df['date'] = pd.to_datetime(df['date'])
-
-  # Set the date column as the index for efficient lookup
-  df.set_index('date', inplace=True)
-
-  # Try to select data for the specified dates
-  try:
-    return df.loc[date_list]
-  except KeyError:  # Handle cases where some dates might not be present
-    print(f"Warning: Data not found for all dates in {date_list}")
-    return df.loc[[date for date in date_list if date in df.index]]  # Return available data
+def create_hourly_increments(date):
+  return pd.date_range(start=date, periods=24, freq='H', end = date)
 
 
+def get_date_data(df, date):
+    df['date'] = pd.to_datetime(df['date'])
+    # convert date to datetime
+    date_dt = pd.to_datetime(date)
+    # getting the hourly increments for the selected date
+    hourly_df = pd.DataFrame({'date': create_hourly_increments(date)})
+    data_ = df[df['date'].isin(all_hours_df['date'].astype(str).values.tolist())]
+    return data_
 
-class LSTM(nn.Module):
-  def __init__(self, input_size, hidden_size, num_stacked_layers):
-    super().__init__()
-    self.hidden_size = hidden_size
-    self.num_stacked_layers = num_stacked_layers
-
-    self.lstm = nn.LSTM(input_size, hidden_size, num_stacked_layers, batch_first=True)
-    self.fc = nn.Linear(hidden_size, 1)
-
-  def forward(self, x):
-    batch_size = x.size(0)
-    h0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(device)
-    c0 = torch.zeros(self.num_stacked_layers, batch_size, self.hidden_size).to(device)
-
-    out, _ = self.lstm(x, (h0, c0))
-    out = self.fc(out[:, -1, :])
-    return out
-
-device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-
-
-def load_model():
-    model = LSTM(1, 4, 1)
-    model.to(device)
-    # Load the state dictionaries
-    model.load_state_dict(torch.load("lstm_model.pt"))
-    return model
 
 def prepare_data(df, n_steps):
   df = dc(df)
@@ -102,3 +66,8 @@ def prepare_data(df, n_steps):
   df.dropna(inplace=True)
 
   return df
+
+@st.cache_data
+  def load_db():
+    db = pd.read_csv('clean.csv')
+    return db

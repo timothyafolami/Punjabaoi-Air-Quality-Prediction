@@ -37,6 +37,10 @@ if selected_week == "Last Week":
     with st.sidebar:
         st.write("You selected Last Week")
         date = st.selectbox("Select a date", last_week_dates)
+        try:
+            df = load_db()
+            date_data = get_date_data(df, date)
+            
   
 elif selected_week == "Next Week":
     # Use next_week_dates for further processing

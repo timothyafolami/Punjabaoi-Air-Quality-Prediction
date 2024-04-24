@@ -35,3 +35,12 @@ class LSTM(nn.Module):
     out = self.fc(out[:, -1, :])
     return out
 
+device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
+
+def load_model():
+    model = LSTM(1, 4, 1)
+    model.to(device)
+    # Load the state dictionaries
+    model.load_state_dict(torch.load("lstm_model.pt"))
+    return model
