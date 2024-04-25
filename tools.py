@@ -159,8 +159,10 @@ def predict_today(n=24):
         # Append the prediction to the final list
         predictions.append(predicted_value)
 
-    return predictions[-24:]
 
+    return predictions[-24:]
+data_scaler = joblib.load('data_scaler.pkl')
+target_scaler = joblib.load('target_scaler.pkl')
 
 # predicting for thr last seven days
 def predict_last_seven_days():

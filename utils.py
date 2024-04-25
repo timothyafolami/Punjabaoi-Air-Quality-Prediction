@@ -18,6 +18,11 @@ def get_today_date():
 
     return current_date
 
+@st.cache_data
+def load_db():
+  db = pd.read_csv('clean.csv')
+  return db
+
 
 def get_last_seven_days():
   """Returns a list of dates for the last seven days, including today."""
@@ -43,7 +48,7 @@ def get_next_seven_days():
 
 def create_hourly_increments(date):
 
-    return pd.date_range(date, periods=24, freq='H')
+    return pd.date_range(date, periods=24, freq='h')
     
 def get_date_data(date):
     # load the database
@@ -61,3 +66,52 @@ def get_date_data(date):
 def load_db():
   db = pd.read_csv('clean.csv')
   return db
+
+def today():
+    return date.today()
+
+def next_week_dates_():
+    next = today() + timedelta(days=7)
+    dates = [next + timedelta(days=i) for i in range(7)]
+    string_format = "%Y-%m-%d"
+    next_week_strings = [date.strftime(string_format) for date in dates]
+    days_dt = [pd.to_datetime(date) for date in next_week_strings]
+
+    hourly_dataframes = []
+    for date in days_dt:
+        hourly_df = pd.DataFrame({'date': create_hourly_increments(date)})
+        hourly_dataframes.append(hourly_df)
+
+    all_hours_df = pd.concat(hourly_dataframes, ignore_index=True)
+    return all_hours_df 
+
+
+def past_week_model_data():
+    # loading the database
+    data = load_db()
+    last_week = today() - timedelta(days = 7)
+    dates = [last_week + timedelta(days=i) for i in range(7)]
+    string_format = "%Y-%m-%d"
+    # Convert dates to strings using list comprehension
+    next_week_strings = [date.strftime(string_format) for date in dates]
+    days_dt = [pd.to_datetime(date) for date in next_week_strings]
+
+    # Create a list of DataFrames, each containing hourly increments for a date
+    hourly_dataframes = []
+    for date in days_dt:
+        hourly_df = pd.DataFrame({'date': create_hourly_increments(date)}) 
+        hourly_dataframes.append(hourly_df)
+
+    # Concatenate all DataFrames into a single DataFrame
+    all_hours_df = pd.concat(hourly_dataframes, ignore_index=True)  
+    dates_ = all_hours_df['date'].astype(str).values.tolist()
+    # now gwtting from the data
+    data_ = data[data['date'].isin(all_hours_df['date'].astype(str).values.tolist())]
+    # return the AQI column
+    out = data_['AQI'].values
+    # extending by adding zeros to make it 168
+    out = np.append(out, np.zeros(168 - len(out)))
+
+    # creating a dataframe with the date and the AQI
+    out = pd.DataFrame({'date': dates_, 'AQI': out})
+    return out

@@ -1,7 +1,10 @@
 import streamlit as st
 from streamlit_folium import st_folium
 import folium
+import datetime
+from datetime import date, timedelta
 from utils import *
+from tools import *
 
 st.set_page_config(layout="wide")
 st.title("Interactive Streamlit Map")
@@ -39,7 +42,7 @@ if selected_week == "Last Week":
         date = st.selectbox("Select a date", last_week_dates)
     try:
         df = load_db()
-        date_data = get_date_data(df, date)
+        date_data = get_date_data(date)
         # adding a condition here
         if len(date_data) > 0:
             # selecting two columns 
@@ -58,6 +61,48 @@ elif selected_week == "Next Week":
         st.write("You selected Next Week")
         date = st.selectbox("Select a date", next_week_dates)
 
+################################################
+# making a plot of the past week data
+st.markdown("## Past Week Data")
+# getting the data
+past_week_data = past_week_model_data()
+past_week_data_ = past_week_data['AQI'] 
+# getting the forecast
+forecast = predict_last_seven_days()
+# plotting the data and forecast together
+# using a dataframe to add themtogether
+d1 = pd.DataFrame()
+d1['past_week'] = past_week_data_
+d1['forecast'] = forecast
+d1.index = past_week_data['date']
+st.line_chart(d1)
+
+#########################################################
+
+# Next week data forecasting
+st.markdown("## Next Week Forecast")
+
+nxt_hrs = next_week_dates_()
+
+next_week_forecast = predict_next_seven_days()
+# in a dataframe
+next_week_forecast = pd.DataFrame(next_week_forecast)
+next_week_forecast.index = nxt_hrs['date']
+# plotting the forecast
+st.line_chart(next_week_forecast)
+
+
+########################################################
+# Todays forecast
+st.markdown("## Todays Forecast")
+hrs = [j for j in range(0, 24)]
+# getting today's forecast
+today_forecast = predict_today()
+# placing the forecast in a dataframe
+today_forecast = pd.DataFrame(today_forecast)
+today_forecast.index = hrs
+# displaying the forecast
+st.bar_chart(today_forecast)
 
   
 
