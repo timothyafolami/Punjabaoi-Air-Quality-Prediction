@@ -37,15 +37,27 @@ if selected_week == "Last Week":
     with st.sidebar:
         st.write("You selected Last Week")
         date = st.selectbox("Select a date", last_week_dates)
-        try:
-            df = load_db()
-            date_data = get_date_data(df, date)
-            
+    try:
+        df = load_db()
+        date_data = get_date_data(df, date)
+        # adding a condition here
+        if len(date_data) > 0:
+            # selecting two columns 
+            date_data = date_data[['date', 'AQI']]
+            st.markdown('## Hourly AQI for selected date')
+            # creating a bar chart
+            st.bar_chart(date_data.set_index('date'))
+        else: 
+            st.write('No data available for the selected date')
+    except:
+        st.write("No data available for the selected date")
   
 elif selected_week == "Next Week":
     # Use next_week_dates for further processing
     with st.sidebar:
         st.write("You selected Next Week")
         date = st.selectbox("Select a date", next_week_dates)
+
+
   
 

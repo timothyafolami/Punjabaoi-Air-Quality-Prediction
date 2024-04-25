@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import os
 import torch
 import torch.nn as nn
+import streamlit as st
 
 
 
@@ -41,33 +42,22 @@ def get_next_seven_days():
   return last_week_strings
 
 def create_hourly_increments(date):
-  return pd.date_range(start=date, periods=24, freq='H', end = date)
 
-
-def get_date_data(df, date):
+    return pd.date_range(date, periods=24, freq='H')
+    
+def get_date_data(date):
+    # load the database
+    df = load_db()
     df['date'] = pd.to_datetime(df['date'])
     # convert date to datetime
     date_dt = pd.to_datetime(date)
     # getting the hourly increments for the selected date
     hourly_df = pd.DataFrame({'date': create_hourly_increments(date)})
-    data_ = df[df['date'].isin(all_hours_df['date'].astype(str).values.tolist())]
+    data_ = df[df['date'].isin(hourly_df['date'].astype(str).values.tolist())]
     return data_
 
 
-def prepare_data(df, n_steps):
-  df = dc(df)
-  df['date'] = pd.to_datetime(df['date'])
-
-  df.set_index('date', inplace=True)
-
-  for i in range(1, n_steps+1):
-    df[f"AQI(t-{i})"] = df['AQI'].shift(i)
-
-  df.dropna(inplace=True)
-
-  return df
-
 @st.cache_data
-  def load_db():
-    db = pd.read_csv('clean.csv')
-    return db
+def load_db():
+  db = pd.read_csv('clean.csv')
+  return db
