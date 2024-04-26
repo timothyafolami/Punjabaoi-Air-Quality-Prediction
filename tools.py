@@ -41,7 +41,7 @@ class LSTM(nn.Module):
     return out
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-lookback = 6
+lookback = 7
 batch_size = 16
 
 def prepare_data(df, n_steps):
@@ -85,10 +85,9 @@ def model_data(df):
 
 # model loading function
 def load_model():
-    model = LSTM(1, 4, 1)
-    model.to(device)
-    # Load the state dictionaries
-    model.load_state_dict(torch.load("lstm_model.pt"))
+    model = torch.load('new_1_lstm_model.pt')
+    for param in model.lstm.parameters():
+        param.requires_grad = False
     return model
 
 
@@ -128,9 +127,10 @@ def predict_today(n=24):
     hours_diff = (today_date - last_date).total_seconds() / 3600
     aqi_data = data['AQI'].values.tolist()
     model = load_model()
+    model.eval()
     data_scaler = joblib.load('data_scaler.pkl')
     target_Scaler = joblib.load('target_scaler.pkl')
-    lookback = 24
+    lookback = 7
     # ensureing we are just collecting the last 6 values
     current_data = aqi_data[-lookback:]
     predictions = []
@@ -185,11 +185,12 @@ def predict_last_seven_days():
     aqi_data = data['AQI'].values.tolist()[-previous_day_hrs:-hours_diff]
     # loading model
     model = load_model()
+    model.eval()
     # loading scalers
     data_scaler = joblib.load('data_scaler.pkl')
     target_scaler = joblib.load('target_scaler.pkl')
     # lookback
-    lookback = 24
+    lookback = 7
     # current data
     current_data = aqi_data[-lookback:]
     # predictions
@@ -232,9 +233,10 @@ def predict_next_seven_days():
     hours_diff += 168
     aqi_data = data['AQI'].values.tolist()
     model = load_model()
+    model.eval()
     data_scaler = joblib.load('data_scaler.pkl')
     target_Scaler = joblib.load('target_scaler.pkl')
-    lookback = 24
+    lookback = 7
     # ensureing we are just collecting the last 6 values
     current_data = aqi_data[-lookback:]
     predictions = []

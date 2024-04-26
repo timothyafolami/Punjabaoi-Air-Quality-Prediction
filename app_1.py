@@ -5,11 +5,35 @@ import datetime
 from datetime import date, timedelta
 from utils import *
 from tools import *
-
-st.set_page_config(layout="wide")
-st.title("Interactive Streamlit Map")
-
 import geopandas as gpd
+st.set_page_config(layout="wide")
+st.title("AQI in Punjab, Pakistan")
+# prep for today info
+today_forecast = predict_today()
+@st.cache_data
+def get_current_hour():
+    return datetime.datetime.now().hour
+
+# function to get the current date
+@st.cache_data
+def get_current_date():
+    return datetime.datetime.now().date()
+
+date_of_today = get_current_date()
+hour_of_day = get_current_hour()
+aqi_value = today_forecast[hour_of_day]
+# add these values at the top left cover of the screen in a column
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.markdown("## Today's Date")
+    st.markdown(date_of_today)
+with col2:
+    st.markdown("## Current Hour")
+    st.markdown(hour_of_day)
+with col3:
+    st.markdown("## Current AQI")
+    st.markdown(aqi_value)
+
 
 # Load your shapefile (assuming 'map_data' folder and 'aoi_punjab.shp' filename)
 gdf = gpd.read_file('punjabaoi/aoi_punjab.shp')
@@ -19,13 +43,25 @@ center_x = 31.1471
 center_y = 75.3412
 
 # Create the Folium map
-m = folium.Map(location=[center_x, center_y], zoom_start=7)  # Adjust zoom level if needed
+m = folium.Map(location=[center_x, center_y], zoom_start=8)
 
 # Add a GeoJSON layer
 folium.GeoJson(data=gdf.to_json(), name='My Shapefile').add_to(m)
 
 # Display the map with desired width
-st_folium(m, width=1400, height=1000)
+st_folium(m, width=1400, height=800)
+
+########################################################
+# Todays forecast
+st.markdown("## Todays Forecast")
+hrs = [j for j in range(0, 24)]
+# getting today's forecast
+today_forecast = predict_today()
+# placing the forecast in a dataframe
+today_forecast = pd.DataFrame(today_forecast)
+today_forecast.index = hrs
+# displaying the forecast
+st.bar_chart(today_forecast)
 
 last_week_dates = get_last_seven_days()
 next_week_dates = get_next_seven_days()
@@ -91,18 +127,6 @@ next_week_forecast.index = nxt_hrs['date']
 # plotting the forecast
 st.line_chart(next_week_forecast)
 
-
-########################################################
-# Todays forecast
-st.markdown("## Todays Forecast")
-hrs = [j for j in range(0, 24)]
-# getting today's forecast
-today_forecast = predict_today()
-# placing the forecast in a dataframe
-today_forecast = pd.DataFrame(today_forecast)
-today_forecast.index = hrs
-# displaying the forecast
-st.bar_chart(today_forecast)
 
   
 
