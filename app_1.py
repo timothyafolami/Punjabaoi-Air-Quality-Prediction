@@ -10,18 +10,18 @@ st.set_page_config(layout="wide")
 st.title("AQI in Punjab, Pakistan")
 # prep for today info
 today_forecast = predict_today()
-@st.cache_data
+
 def get_current_hour():
     return datetime.datetime.now().hour
 
 # function to get the current date
-@st.cache_data
+
 def get_current_date():
     return datetime.datetime.now().date()
 
 date_of_today = get_current_date()
 hour_of_day = get_current_hour()
-aqi_value = today_forecast[hour_of_day]
+aqi_value = today_forecast['AQI'].tolist()[hour_of_day]
 # add these values at the top left cover of the screen in a column
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -54,7 +54,7 @@ st_folium(m, width=1400, height=800)
 ########################################################
 # Todays forecast
 st.markdown("## Todays Forecast")
-hrs = [j for j in range(0, 24)]
+hrs = today_forecast.index.tolist()
 # getting today's forecast
 today_forecast = predict_today()
 # placing the forecast in a dataframe
@@ -102,6 +102,8 @@ elif selected_week == "Next Week":
 st.markdown("## Past Week Data")
 # getting the data
 past_week_data = past_week_model_data()
+past_week_data['date'] = pd.to_datetime(past_week_data['date'])
+past_week_data['date'] = past_week_data['date'].astype(str)
 past_week_data_ = past_week_data['AQI'] 
 # getting the forecast
 forecast = predict_last_seven_days()
@@ -109,8 +111,17 @@ forecast = predict_last_seven_days()
 # using a dataframe to add themtogether
 d1 = pd.DataFrame()
 d1['past_week'] = past_week_data_
-d1['forecast'] = forecast
 d1.index = past_week_data['date']
+# opening predicted
+pred = pd.read_csv('prediction.csv')
+pred.columns = ['date', 'AQI']
+pred['date'] = pd.to_datetime(pred['date'])
+pred['date'] = pred['date'].astype(str)
+# getting the similar dates
+pred_1 = pred[pred['date'].isin(past_week_data['date'].values.tolist())].reset_index(drop=True)
+pred_1.index = pred_1['date']
+# adding the forecast to the dataframe
+d1['AQI'] = pred_1['AQI']
 st.line_chart(d1)
 
 #########################################################
@@ -119,13 +130,21 @@ st.line_chart(d1)
 st.markdown("## Next Week Forecast")
 
 nxt_hrs = next_week_dates_()
-
-next_week_forecast = predict_next_seven_days()
-# in a dataframe
-next_week_forecast = pd.DataFrame(next_week_forecast)
-next_week_forecast.index = nxt_hrs['date']
+nxt_hrs['date'] = pd.to_datetime(nxt_hrs['date'])
+nxt_hrs['date'] = nxt_hrs['date'].astype(str)
+d1 = pd.DataFrame()
+pred = pd.read_csv('prediction.csv')
+pred.columns = ['date', 'AQI']
+pred['date'] = pd.to_datetime(pred['date'])
+pred['date'] = pred['date'].astype(str)
+# getting the similar dates
+pred_1 = pred[pred['date'].isin(nxt_hrs['date'].values.tolist())]
+pred_1.index = pred_1['date']
+d1.index = pred_1['date']
+# adding the forecast to the dataframe
+d1['AQI'] = pred_1['AQI']
 # plotting the forecast
-st.line_chart(next_week_forecast)
+st.line_chart(d1)
 
 
   

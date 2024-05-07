@@ -8,3 +8,4 @@ matplotlib
 torch
 joblib
 scikit-learn
+geemap

@@ -114,53 +114,30 @@ def make_future_predictions(df, future_steps):
             X_ = torch.cat((X_, y_pred.reshape(1, 1, 1)), dim=1)
     return X_, y_
 
-def predict_today(n=24):
+
+def create_hourly_increments(date):
+  return pd.date_range(start=date, periods=24, freq='H')
+
+today_date = date.today()
+def predict_today():
     # loading the database
     data = pd.read_csv('clean.csv')
     # getting today's date
-    today_date = date.today()
-    today_date = pd.to_datetime(today_date)
-    # get last date in the data
-    last_date = data['date'].iloc[-1]
+    date = create_hourly_increments(today_date).astype(str).tolist()
+    d1 = pd.DataFrame()
+    pred = pd.read_csv('prediction.csv')
+    pred.columns = ['date', 'AQI']
+    pred['date'] = pd.to_datetime(pred['date'])
+    pred['date'] = pred['date'].astype(str)
+    pred_1 = pred[pred['date'].isin(date)]
+    pred_1.index = pred_1['date']
+    d1.index = pred_1['date']
+    # adding the forecast to the dataframe
+    d1['AQI'] = pred_1['AQI']
+    
     # converting both to time and getting the total hours between them
-    last_date = pd.to_datetime(last_date)
-    hours_diff = (today_date - last_date).total_seconds() / 3600
-    aqi_data = data['AQI'].values.tolist()
-    model = load_model()
-    model.eval()
-    data_scaler = joblib.load('data_scaler.pkl')
-    target_Scaler = joblib.load('target_scaler.pkl')
-    lookback = 7
-    # ensureing we are just collecting the last 6 values
-    current_data = aqi_data[-lookback:]
-    predictions = []
-    for _ in range(int(hours_diff)):
-        # Ensure current_data has the required length
-        if len(current_data) != lookback:
-            raise ValueError(f"Current data must have length {lookback}")
+    return d1
 
-        # Prepare data for the model (scaling and reshaping)
-        current_data_np = np.array([current_data])  # Assuming data is a list
-        scaled_data = data_scaler.transform(current_data_np)
-        X = scaled_data.reshape((1, lookback, 1))
-        X_ = torch.tensor(X).float().to(device)
-
-        # Make prediction
-        with torch.no_grad():
-            y_pred = model(X_)
-
-        # Inverse scaling of the predicted value (assuming single value prediction)
-        predicted_value = target_scaler.inverse_transform(y_pred.cpu().detach().numpy())[0][0]
-
-        # Update current_data for the next iteration
-        current_data.append(predicted_value)
-        current_data = current_data[-lookback:]  # Keep only the last lookback values
-
-        # Append the prediction to the final list
-        predictions.append(predicted_value)
-
-
-    return predictions[-24:]
 data_scaler = joblib.load('data_scaler.pkl')
 target_scaler = joblib.load('target_scaler.pkl')
 
